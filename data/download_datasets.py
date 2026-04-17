@@ -18,35 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 DATASETS = {
     # ── English TTS ──
-    "indicvoices_r": {
-        "name": "IndicVoices-R (English subset)",
-        "type": "tts",
-        "language": "en-in",
-        "source": "huggingface",
-        "hf_id": "ai4bharat/indicvoices_r",
-        "hours": "~80-175h English",
-        "description": "1,704 hours multilingual, filter for English",
-    },
-    "svarah": {
-        "name": "Svarah — Indian English",
-        "type": "tts",
-        "language": "en-in",
-        "source": "huggingface",
-        "hf_id": "ai4bharat/svarah",
-        "hours": "9.6h",
-        "description": "117 speakers, 19 states, diverse Indian English",
-    },
-    # ── English STT ──
-    "common_voice_en_in": {
-        "name": "Mozilla Common Voice (en-IN)",
-        "type": "stt",
-        "language": "en-in",
-        "source": "huggingface",
-        "hf_id": "mozilla-foundation/common_voice_16_1",
-        "subset": "en",
-        "hours": "2000+h",
-        "description": "Crowdsourced, diverse accents",
-    },
+    
     # ── Kannada TTS ──
     "indictts_kannada": {
         "name": "IndicTTS Kannada (IIT Madras)",
