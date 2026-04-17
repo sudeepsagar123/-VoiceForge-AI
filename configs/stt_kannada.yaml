@@ -1,0 +1,80 @@
+# Conformer-CTC Configuration — Kannada
+# =====================================================
+
+model:
+  name: "conformer_ctc_kannada"
+  type: "conformer_ctc"
+
+  subsampling:
+    type: "conv2d"
+    input_dim: 83
+    output_dim: 256
+    num_layers: 2
+    kernel_size: 3
+    stride: 2
+
+  encoder:
+    d_model: 256
+    ffn_dim: 1024
+    num_heads: 4
+    num_layers: 12
+    dropout: 0.1
+    conv_kernel_size: 31
+    use_relative_pos: true
+    activation: "swish"
+
+  decoder:
+    type: "ctc"
+    vocab_size: 5000          # SentencePiece BPE for Kannada
+    blank_id: 0
+
+audio:
+  sample_rate: 16000
+  n_fft: 512
+  hop_length: 160
+  win_length: 400
+  n_mels: 80
+  use_pitch: true
+  pitch_dim: 3
+  feature_dim: 83
+
+training:
+  batch_size: 16
+  learning_rate: 5.0e-4
+  betas: [0.9, 0.98]
+  eps: 1.0e-9
+  weight_decay: 1.0e-6
+  max_steps: 500000
+  warmup_steps: 10000
+  scheduler: "noam"
+  grad_clip: 5.0
+  fp16: true
+  seed: 42
+  ctc_weight: 1.0
+  label_smoothing: 0.1
+  save_every_n_steps: 5000
+  eval_every_n_steps: 2000
+  keep_last_n_checkpoints: 5
+  spec_augment:
+    freq_masks: 2
+    freq_mask_width: 27
+    time_masks: 10
+    time_mask_width: 0.05
+
+data:
+  train_manifest: "data/kannada/stt/train_manifest.json"
+  val_manifest: "data/kannada/stt/val_manifest.json"
+  language: "kn"
+  tokenizer_model: "data/kannada/stt/tokenizer.model"
+  max_audio_length: 30.0
+  min_audio_length: 0.5
+  inference:
+    chunk_length_sec: 30
+    overlap_sec: 5
+    vad_threshold: 0.5
+    beam_width: 10
+
+paths:
+  checkpoint_dir: "checkpoints/stt_kannada"
+  log_dir: "logs/stt_kannada"
+  output_dir: "outputs/stt_kannada"

@@ -1,0 +1,110 @@
+# VITS2 Configuration — English (Indian Accent)
+# ================================================
+
+model:
+  name: "vits2_english"
+  type: "vits2"
+
+  # Text Encoder
+  text_encoder:
+    vocab_size: 256          # Character-level + phoneme symbols
+    hidden_dim: 192
+    ffn_dim: 768
+    num_heads: 2
+    num_layers: 6
+    dropout: 0.1
+    kernel_size: 3
+
+  # Posterior Encoder (training only)
+  posterior_encoder:
+    in_channels: 513         # n_fft // 2 + 1
+    hidden_dim: 192
+    out_channels: 192
+    kernel_size: 5
+    dilation_rate: 1
+    num_layers: 16
+
+  # Normalizing Flow
+  flow:
+    hidden_dim: 192
+    kernel_size: 5
+    dilation_rate: 1
+    num_layers: 4
+    num_flows: 4
+
+  # Stochastic Duration Predictor
+  duration_predictor:
+    hidden_dim: 192
+    kernel_size: 3
+    dropout: 0.5
+    num_flows: 4
+
+  # HiFi-GAN Generator
+  generator:
+    initial_channels: 512
+    resblock_type: "1"
+    resblock_dilation_sizes: [[1, 3, 5], [1, 3, 5], [1, 3, 5]]
+    resblock_kernel_sizes: [3, 7, 11]
+    upsample_rates: [8, 8, 2, 2]
+    upsample_initial_channel: 512
+    upsample_kernel_sizes: [16, 16, 4, 4]
+
+  # Multi-Period Discriminator
+  discriminator:
+    periods: [2, 3, 5, 7, 11]
+    use_spectral_norm: false
+
+audio:
+  sample_rate: 22050
+  n_fft: 1024
+  hop_length: 256
+  win_length: 1024
+  n_mels: 80
+  mel_fmin: 0.0
+  mel_fmax: null             # Nyquist / 2
+  segment_size: 8192         # ~0.37 sec training segments
+
+training:
+  batch_size: 16
+  learning_rate: 2.0e-4
+  betas: [0.8, 0.99]
+  eps: 1.0e-9
+  weight_decay: 0.01
+  epochs: 1000
+  lr_decay: 0.999875
+  grad_clip: null
+  fp16: true
+  seed: 42
+
+  # Checkpointing
+  save_every_n_epochs: 10
+  eval_every_n_epochs: 5
+  keep_last_n_checkpoints: 5
+
+  # Loss weights
+  loss_weights:
+    mel: 45.0
+    kl: 1.0
+    duration: 1.0
+    generator: 1.0
+    feature_matching: 2.0
+
+data:
+  train_filelist: "data/english/tts/train.txt"
+  val_filelist: "data/english/tts/val.txt"
+  language: "en-in"
+  use_phonemes: true
+  text_cleaners: ["english_cleaners"]
+  max_text_length: 300
+  max_audio_length: 15.0     # seconds
+
+  # Long text inference
+  inference:
+    max_chars_per_chunk: 200
+    crossfade_ms: 50
+    speed: 1.0
+
+paths:
+  checkpoint_dir: "checkpoints/tts_english"
+  log_dir: "logs/tts_english"
+  output_dir: "outputs/tts_english"

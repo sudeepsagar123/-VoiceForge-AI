@@ -1,0 +1,91 @@
+# Conformer-CTC Configuration — English (Indian Accent)
+# =====================================================
+
+model:
+  name: "conformer_ctc_english"
+  type: "conformer_ctc"
+
+  # Subsampling Frontend
+  subsampling:
+    type: "conv2d"
+    input_dim: 83             # 80 mel + 3 pitch
+    output_dim: 256
+    num_layers: 2
+    kernel_size: 3
+    stride: 2                 # 4x downsampling total
+
+  # Conformer Encoder
+  encoder:
+    d_model: 256
+    ffn_dim: 1024
+    num_heads: 4
+    num_layers: 12
+    dropout: 0.1
+    conv_kernel_size: 31
+    use_relative_pos: true
+    activation: "swish"
+
+  # CTC Decoder
+  decoder:
+    type: "ctc"
+    vocab_size: 5000          # SentencePiece BPE
+    blank_id: 0
+
+audio:
+  sample_rate: 16000
+  n_fft: 512
+  hop_length: 160             # 10ms
+  win_length: 400             # 25ms
+  n_mels: 80
+  use_pitch: true
+  pitch_dim: 3
+  feature_dim: 83             # 80 + 3
+
+training:
+  batch_size: 16
+  learning_rate: 5.0e-4
+  betas: [0.9, 0.98]
+  eps: 1.0e-9
+  weight_decay: 1.0e-6
+  max_steps: 500000
+  warmup_steps: 10000
+  scheduler: "noam"           # Noam scheduler (warmup + inverse sqrt decay)
+  grad_clip: 5.0
+  fp16: true
+  seed: 42
+
+  # CTC-specific
+  ctc_weight: 1.0
+  label_smoothing: 0.1
+
+  # Checkpointing
+  save_every_n_steps: 5000
+  eval_every_n_steps: 2000
+  keep_last_n_checkpoints: 5
+
+  # SpecAugment (data augmentation)
+  spec_augment:
+    freq_masks: 2
+    freq_mask_width: 27
+    time_masks: 10
+    time_mask_width: 0.05     # 5% of utterance length
+
+data:
+  train_manifest: "data/english/stt/train_manifest.json"
+  val_manifest: "data/english/stt/val_manifest.json"
+  language: "en-in"
+  tokenizer_model: "data/english/stt/tokenizer.model"
+  max_audio_length: 30.0      # seconds
+  min_audio_length: 0.5       # seconds
+
+  # Long audio inference
+  inference:
+    chunk_length_sec: 30
+    overlap_sec: 5
+    vad_threshold: 0.5
+    beam_width: 10
+
+paths:
+  checkpoint_dir: "checkpoints/stt_english"
+  log_dir: "logs/stt_english"
+  output_dir: "outputs/stt_english"

@@ -1,0 +1,35 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# PyTorch and Checkpoints
+*.pt
+*.pth
+checkpoints/
+
+# Data
+data/english/
+data/kannada/
+data/**/*.wav
+data/**/*.flac
+data/**/*.mp3
+data/**/*.zip
+outputs/
+
+# Logs
+logs/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+*.swp
