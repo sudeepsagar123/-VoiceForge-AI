@@ -190,10 +190,10 @@ class VITS2(nn.Module):
             # Compute alignment between text and audio
             s_p_sq_r = torch.exp(-2 * logs_p)  # [B, C, T_text]
             # neg_cent = -(z_p^2 * s_p_sq_r - 2 * z_p * m_p * s_p_sq_r + m_p^2 * s_p_sq_r)
-            neg_cent1 = torch.sum(-0.5 * math.log(2 * math.pi) - logs_p, dim=1).unsqueeze(-1)  # [B, 1, T_text]
+            neg_cent1 = torch.sum(-0.5 * math.log(2 * math.pi) - logs_p, dim=1).unsqueeze(1)  # [B, 1, T_text]
             neg_cent2 = torch.matmul(-0.5 * (z_p ** 2).transpose(1, 2), s_p_sq_r)  # [B, T_mel, T_text]
             neg_cent3 = torch.matmul(z_p.transpose(1, 2), (m_p * s_p_sq_r))  # [B, T_mel, T_text]
-            neg_cent4 = torch.sum(-0.5 * (m_p ** 2) * s_p_sq_r, dim=1).unsqueeze(-1)  # [B, 1, T_text]
+            neg_cent4 = torch.sum(-0.5 * (m_p ** 2) * s_p_sq_r, dim=1).unsqueeze(1)  # [B, 1, T_text]
             neg_cent = neg_cent1 + neg_cent2 + neg_cent3 + neg_cent4
 
             # Apply masks
