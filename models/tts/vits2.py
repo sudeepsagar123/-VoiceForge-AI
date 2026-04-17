@@ -333,9 +333,9 @@ def monotonic_alignment_search(neg_cent, attn_mask):
         path: [B, 1, T_mel, T_text] optimal monotonic alignment
     """
     # Use numpy for DP (GPU tensors → CPU for this operation)
+    device_original = neg_cent.device
     neg_cent = neg_cent.squeeze(1).cpu().numpy()
     attn_mask = attn_mask.squeeze(1).cpu().numpy()
-    device = torch.device("cpu")  # Will move back to original device
 
     b, t_mel, t_text = neg_cent.shape
     path = np.zeros_like(neg_cent)
@@ -366,7 +366,7 @@ def monotonic_alignment_search(neg_cent, attn_mask):
             if j > 0 and (i == 0 or Q[i - 1, j - 1] >= Q[i - 1, j]):
                 j -= 1
 
-    return torch.from_numpy(path).unsqueeze(1).float()
+    return torch.from_numpy(path).unsqueeze(1).float().to(device_original)
 
 
 # ── Model Test ──
