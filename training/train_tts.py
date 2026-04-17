@@ -65,8 +65,8 @@ def train(config_path: str, resume: str = None):
     print(f"VITS2 TTS Training — {config['model']['name']}")
     print(f"Device: {device}")
     if device.type == "cuda":
-        print(f"GPU: {torch.cuda.get_device_name()}")
-        print(f"VRAM: {torch.cuda.get_device_properties(0).total_mem / 1024**3:.1f} GB")
+        print(f"GPU: {torch.cuda.get_device_name(0)}")
+        print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
     print(f"{'='*60}\n")
 
     # Logger
