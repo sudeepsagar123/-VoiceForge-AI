@@ -119,17 +119,19 @@ def download_url_dataset(urls: list, output_dir: str):
         filename = url.split("/")[-1]
         filepath = os.path.join(output_dir, filename)
 
+        is_downloaded = False
         if os.path.exists(filepath):
             print(f"  ⏩ Already exists: {filename}")
-            continue
+            is_downloaded = True
+        else:
+            print(f"  📥 Downloading {filename}...")
+            urllib.request.urlretrieve(url, filepath)
+            print(f"  ✅ Saved: {filepath}")
+            is_downloaded = True
 
-        print(f"  📥 Downloading {filename}...")
-        urllib.request.urlretrieve(url, filepath)
-        print(f"  ✅ Saved: {filepath}")
-
-        # Extract if zip
-        if filepath.endswith(".zip"):
-            print(f"  📦 Extracting...")
+        # Always extract if zip (it will overwrite existing files which is fine)
+        if filepath.endswith(".zip") and is_downloaded:
+            print(f"  📦 Extracting {filename}...")
             with zipfile.ZipFile(filepath, "r") as z:
                 z.extractall(output_dir)
             print(f"  ✅ Extracted to {output_dir}")
@@ -249,7 +251,7 @@ if __name__ == "__main__":
     parser.add_argument("--create-manifest", type=str, default=None, help="Create STT manifest from directory")
     args = parser.parse_args()
 
-    if args.list or args.dataset is None:
+    if args.list:
         list_datasets()
     elif args.create_filelist:
         create_tts_filelist(args.create_filelist, os.path.join(args.output, "train.txt"))
@@ -262,5 +264,4 @@ if __name__ == "__main__":
         elif info["source"] == "url":
             download_url_dataset(info["urls"], args.output)
     else:
-        print(f"❌ Unknown dataset: {args.dataset}")
-        print(f"Available: {', '.join(DATASETS.keys())}")
+        list_datasets()
