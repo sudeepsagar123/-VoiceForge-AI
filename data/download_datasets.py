@@ -88,11 +88,14 @@ def download_hf_dataset(hf_id: str, output_dir: str, subset: str = None):
         if subset:
             kwargs["name"] = subset
 
-        dataset = load_dataset(hf_id, split="train[:2%]",**kwargs)
+        dataset = load_dataset(hf_id, **kwargs)
 
-        print(f"✅ Downloaded! Splits: {list(dataset.keys())}")
-        for split_name, split_data in dataset.items():
-            print(f"   {split_name}: {len(split_data)} samples")
+        if isinstance(dataset, dict):
+            print(f"✅ Downloaded! Splits: {list(dataset.keys())}")
+            for split_name, split_data in dataset.items():
+                print(f"   {split_name}: {len(split_data)} samples")
+        else:
+            print(f"✅ Downloaded! {len(dataset)} samples")
 
         return dataset
 
