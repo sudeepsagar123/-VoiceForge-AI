@@ -86,7 +86,7 @@ class MultiHeadAttention(nn.Module):
             scores = scores + scores_local
 
         if mask is not None:
-            scores = scores.masked_fill(mask.unsqueeze(1) == 0, -1e4)
+            scores = scores.masked_fill(mask == 0, -1e4)
 
         p_attn = F.softmax(scores, dim=-1)
         p_attn = self.drop(p_attn)
