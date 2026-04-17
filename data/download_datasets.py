@@ -45,8 +45,8 @@ DATASETS = {
         "language": "kn",
         "source": "url",
         "urls": [
-            "https://openslr.trmal.net/resources/79/kn_in_female.zip",
-            "https://openslr.trmal.net/resources/79/kn_in_male.zip",
+            "http://www.openslr.org/resources/79/kn_in_female.zip",
+            "http://www.openslr.org/resources/79/kn_in_male.zip",
         ],
         "hours": "~5h",
         "description": "Google multi-speaker, quality-checked, CC-BY-SA-4.0",
