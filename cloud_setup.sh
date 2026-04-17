@@ -26,8 +26,8 @@ echo "📥 Downloading Kannada Datasets..."
 echo "------------------------------------------------------------"
 # TTS data format: text | wav
 python data/download_datasets.py --dataset indictts_kannada --output data/kannada/tts
-# Extract or process inside to create train.txt
-python data/download_datasets.py --create-filelist data/kannada/tts
+# Extract HF Parquet to WAVs and create train.txt / val.txt
+python data/extract_hf.py --hf_id SPRINGLab/IndicTTS_Kannada --output data/kannada/tts
 
 # STT data format: wav -> jsonl
 python data/download_datasets.py --dataset openslr79_kannada --output data/kannada/stt
