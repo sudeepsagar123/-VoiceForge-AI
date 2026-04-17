@@ -8,7 +8,6 @@ soundfile
 sounddevice
 scipy<=1.10.1
 numpy<1.25.0
-webrtcvad
 
 # Text Processing
 sentencepiece
