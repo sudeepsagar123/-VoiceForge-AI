@@ -12,9 +12,7 @@ venv/
 ENV/
 
 # PyTorch and Checkpoints
-*.pt
-*.pth
-checkpoints/
+# (Checkpoints are explicitly tracked via Git LFS!)
 
 # Data
 data/english/
