@@ -121,8 +121,8 @@ def train(config_path: str, resume: str = None):
         train_dataset,
         batch_size=config["training"]["batch_size"],
         shuffle=True,
-        num_workers=0,  # Windows compatibility
-        pin_memory=False,
+        num_workers=4,  # Linux parallel data loading
+        pin_memory=True,
         collate_fn=collator,
         drop_last=True,
     )
@@ -209,17 +209,21 @@ def train(config_path: str, resume: str = None):
             # ── Generator Forward ──
             with autocast(enabled=scaler is not None):
                 outputs = model(text_ids, text_lengths, specs, spec_lengths)
-                y_hat = outputs["output"]  # Generated audio segment
-
+            # Generate target mel (must run outside autocast due to FP16 STFT bugs in PyTorch 2.4+)
+            with torch.cuda.amp.autocast(enabled=False):
                 # Get real audio segments
                 y = slice_segments(
                     waveforms, outputs["ids_slice"],
                     audio_cfg["segment_size"],
                 ).unsqueeze(1)
-
-                # Mel loss
                 y_mel = audio_processor.get_mel_spectrogram(y.squeeze(1))
-                y_hat_mel = audio_processor.get_mel_spectrogram(y_hat.squeeze(1).detach())
+
+            # ── Generator Forward (Losses) ──
+            with autocast(enabled=scaler is not None):
+                y_hat = outputs["output"]  # Generated audio segment
+                
+                # Mel loss (prediction mel is still under autocast for speed)
+                y_hat_mel = audio_processor.get_mel_spectrogram(y_hat.squeeze(1))
                 loss_mel = F.l1_loss(y_mel, y_hat_mel) * lw["mel"]
 
             # ── Discriminator Training ──
