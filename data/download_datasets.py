@@ -200,15 +200,35 @@ def create_stt_manifest(data_dir: str, output_path: str):
 
     # Find all audio files
     audio_extensions = {".wav", ".flac", ".mp3", ".ogg"}
+    text_map = {}
+    for root, _, files in os.walk(data_dir):
+        for f in files:
+            if f == "line_index.tsv":
+                with open(os.path.join(root, f), "r", encoding="utf-8") as tsv_f:
+                    for line in tsv_f:
+                        parts = line.strip().split("\t")
+                        if len(parts) >= 2:
+                            # Map filename (without extension) to text
+                            text_map[parts[0]] = parts[-1]
+
     for root, _, files in os.walk(data_dir):
         for f in files:
             if any(f.lower().endswith(ext) for ext in audio_extensions):
                 audio_path = os.path.join(root, f)
-                # Look for corresponding text file
-                txt_path = os.path.splitext(audio_path)[0] + ".txt"
-                if os.path.exists(txt_path):
-                    with open(txt_path, "r", encoding="utf-8") as tf:
-                        text = tf.read().strip()
+                base_name = os.path.splitext(f)[0]
+                text = None
+                
+                # Check TSV mapping first
+                if base_name in text_map:
+                    text = text_map[base_name]
+                else:
+                    # Look for corresponding text file
+                    txt_path = os.path.splitext(audio_path)[0] + ".txt"
+                    if os.path.exists(txt_path):
+                        with open(txt_path, "r", encoding="utf-8") as tf:
+                            text = tf.read().strip()
+                
+                if text is not None:
                     try:
                         info = torchaudio.info(audio_path)
                         duration = info.num_frames / info.sample_rate
