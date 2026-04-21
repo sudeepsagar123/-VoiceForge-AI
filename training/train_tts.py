@@ -121,8 +121,8 @@ def train(config_path: str, resume: str = None):
         train_dataset,
         batch_size=config["training"]["batch_size"],
         shuffle=True,
-        num_workers=4,  # Linux parallel data loading
-        pin_memory=True,
+        num_workers=0,  # CRITICAL: Must be 0 to bypass Docker /dev/shm deadlocks
+        pin_memory=False,
         collate_fn=collator,
         drop_last=True,
     )

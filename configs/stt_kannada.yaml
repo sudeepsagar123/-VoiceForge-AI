@@ -34,7 +34,7 @@ audio:
   hop_length: 160
   win_length: 400
   n_mels: 80
-  use_pitch: true
+  use_pitch: false
   pitch_dim: 3
   feature_dim: 83
 
