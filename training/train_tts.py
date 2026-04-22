@@ -140,10 +140,15 @@ def train(config_path: str, resume: str = None):
         hop_length=audio_cfg["hop_length"],
         use_sdp=False,  # Start with deterministic DP
     ).to(device)
+    if torch.cuda.device_count() > 1:
+        model = torch.nn.DataParallel(model)
 
     # Discriminators
     mpd = MultiPeriodDiscriminator().to(device)
     msd = MultiScaleDiscriminator().to(device)
+    if torch.cuda.device_count() > 1:
+        mpd = torch.nn.DataParallel(mpd)
+        msd = torch.nn.DataParallel(msd)
 
     # Optimizers
     train_cfg = config["training"]
@@ -306,7 +311,8 @@ def train(config_path: str, resume: str = None):
         ckpt_dir = config["paths"]["checkpoint_dir"]
         save_checkpoint(
             os.path.join(ckpt_dir, "latest.pt"),
-            model, optim_g, scheduler_g, epoch + 1,
+            model.module if hasattr(model, "module") else model,
+            optim_g, scheduler_g, epoch + 1,
             best_loss=best_loss,
         )
 
@@ -314,7 +320,8 @@ def train(config_path: str, resume: str = None):
             best_loss = avg_losses["total"]
             save_checkpoint(
                 os.path.join(ckpt_dir, "best.pt"),
-                model, optim_g, scheduler_g, epoch + 1,
+                model.module if hasattr(model, "module") else model, 
+                optim_g, scheduler_g, epoch + 1,
                 best_loss=best_loss,
             )
             logger.info(f"  ✅ New best model saved (loss={best_loss:.4f})")
@@ -322,7 +329,8 @@ def train(config_path: str, resume: str = None):
         if (epoch + 1) % train_cfg["save_every_n_epochs"] == 0:
             save_checkpoint(
                 os.path.join(ckpt_dir, f"epoch_{epoch+1:04d}.pt"),
-                model, optim_g, scheduler_g, epoch + 1,
+                model.module if hasattr(model, "module") else model,
+                optim_g, scheduler_g, epoch + 1,
                 best_loss=best_loss,
             )
             cleanup_old_checkpoints(ckpt_dir, keep_last_n=train_cfg["keep_last_n_checkpoints"])
