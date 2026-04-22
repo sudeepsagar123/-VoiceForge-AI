@@ -36,7 +36,7 @@ audio:
   n_mels: 80
   use_pitch: false
   pitch_dim: 3
-  feature_dim: 83
+  feature_dim: 80
 
 training:
   batch_size: 16
