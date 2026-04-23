@@ -33,7 +33,7 @@ def load_config(config_path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def train(config_path: str, resume: str = None):
+def train(config_path: str, resume: str = None, reset_lr: bool = False):
     """Main training function."""
     config = load_config(config_path)
 
@@ -128,11 +128,20 @@ def train(config_path: str, resume: str = None):
     start_step = 0
     best_loss = float("inf")
     if resume and os.path.exists(resume):
-        info = load_checkpoint(resume, model, optimizer, device=device)
-        start_step = info["step"]
-        best_loss = info["best_loss"]
-        scheduler._step = start_step
-        logger.info(f"Resumed from {resume}, step {start_step}")
+        if reset_lr:
+            # Load ONLY model weights, fresh optimizer/scheduler to break plateau
+            ckpt = torch.load(resume, map_location=device)
+            model.load_state_dict(ckpt["model_state_dict"])
+            start_step = ckpt.get("step", 0)
+            best_loss = ckpt.get("best_loss", float("inf"))
+            logger.info(f"Loaded weights from {resume} (step {start_step}) with FRESH optimizer")
+            logger.info(f"LR reset to {train_cfg['learning_rate']} for plateau breaking!")
+        else:
+            info = load_checkpoint(resume, model, optimizer, device=device)
+            start_step = info["step"]
+            best_loss = info["best_loss"]
+            scheduler._step = start_step
+            logger.info(f"Resumed from {resume}, step {start_step}")
 
     # Stats
     total_params = sum(p.numel() for p in model.parameters())
@@ -262,6 +271,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train Conformer-CTC STT model")
     parser.add_argument("--config", type=str, default="configs/stt_english.yaml")
     parser.add_argument("--resume", type=str, default=None)
+    parser.add_argument("--reset-lr", action="store_true", help="Reset optimizer/LR to break plateau")
     parser.add_argument("--test-run", action="store_true")
     args = parser.parse_args()
 
@@ -282,4 +292,4 @@ if __name__ == "__main__":
             print(f"  Decoded[{i}]: {len(tokens)} tokens")
         print("  ✅ Conformer-CTC sanity check passed!")
     else:
-        train(args.config, args.resume)
+        train(args.config, args.resume, reset_lr=args.reset_lr)

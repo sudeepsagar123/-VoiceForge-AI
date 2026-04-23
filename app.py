@@ -16,7 +16,7 @@ def load_engines():
     global tts_engine, stt_engine
     
     tts_checkpoint = "checkpoints/tts_kannada/best.pt"
-    tts_vocab = "data/kannada/tts/vocab.json"
+    tts_vocab = "vocab_tts.json"
     
     stt_checkpoint = "checkpoints/stt_kannada/best.pt"
     stt_tokenizer = "data/kannada/stt/tokenizer.model"

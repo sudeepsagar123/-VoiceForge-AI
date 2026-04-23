@@ -54,7 +54,7 @@ class STTInference:
 
         # Model
         self.model = ConformerCTC(
-            input_dim=83,
+            input_dim=80,
             d_model=256,
             d_ff=1024,
             num_heads=4,
