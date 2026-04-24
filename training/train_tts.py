@@ -55,7 +55,7 @@ def slice_segments(x, ids_str, segment_size):
     return ret
 
 
-def train(config_path: str, resume: str = None):
+def train(config_path: str, resume: str = None, reset_lr: bool = False):
     """Main training function."""
     config = load_config(config_path)
 
@@ -178,10 +178,22 @@ def train(config_path: str, resume: str = None):
     start_epoch = 0
     best_loss = float("inf")
     if resume and os.path.exists(resume):
-        info = load_checkpoint(resume, model, optim_g, scheduler_g, device)
-        start_epoch = info["epoch"]
-        best_loss = info["best_loss"]
-        logger.info(f"Resumed from {resume}, epoch {start_epoch}")
+        if reset_lr:
+            # Load only model weights, skip optimizer/scheduler state
+            ckpt = torch.load(resume, map_location=device)
+            if hasattr(model, "module"):
+                model.module.load_state_dict(ckpt["model_state_dict"])
+            else:
+                model.load_state_dict(ckpt["model_state_dict"])
+            start_epoch = ckpt.get("epoch", 0)
+            best_loss = ckpt.get("best_loss", float("inf"))
+            logger.info(f"Loaded weights from {resume} (epoch {start_epoch}) with FRESH optimizers")
+            logger.info("Adversarial momentum reset to break plateau!")
+        else:
+            info = load_checkpoint(resume, model, optim_g, scheduler_g, device)
+            start_epoch = info["epoch"]
+            best_loss = info["best_loss"]
+            logger.info(f"Resumed from {resume}, epoch {start_epoch}")
 
     # Loss weights
     lw = train_cfg["loss_weights"]
@@ -342,6 +354,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Train VITS2 TTS model")
     parser.add_argument("--config", type=str, default="configs/tts_english.yaml")
     parser.add_argument("--resume", type=str, default=None, help="Path to checkpoint to resume from")
+    parser.add_argument("--reset-lr", action="store_true", help="Reset optimizers to break GAN plateau")
     parser.add_argument("--test-run", action="store_true", help="Run a quick sanity check")
     args = parser.parse_args()
 
@@ -358,4 +371,4 @@ if __name__ == "__main__":
         print(f"  Audio: ~{audio.shape[2]/22050:.2f}s at 22050 Hz")
         print("  ✅ VITS2 sanity check passed!")
     else:
-        train(args.config, args.resume)
+        train(args.config, args.resume, reset_lr=args.reset_lr)
