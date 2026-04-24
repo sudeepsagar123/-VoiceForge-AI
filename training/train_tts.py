@@ -328,15 +328,18 @@ def train(config_path: str, resume: str = None, reset_lr: bool = False):
             best_loss=best_loss,
         )
 
-        if avg_losses["total"] < best_loss:
-            best_loss = avg_losses["total"]
+        # Save best by MEL LOSS (voice quality), NOT total loss
+        # Total loss goes up due to discriminator getting stronger, but mel keeps improving
+        avg_mel_loss = avg_losses["mel"]
+        if avg_mel_loss < best_loss:
+            best_loss = avg_mel_loss
             save_checkpoint(
                 os.path.join(ckpt_dir, "best.pt"),
                 model.module if hasattr(model, "module") else model, 
                 optim_g, scheduler_g, epoch + 1,
                 best_loss=best_loss,
             )
-            logger.info(f"  ✅ New best model saved (loss={best_loss:.4f})")
+            logger.info(f"  NEW BEST model saved! (mel_loss={best_loss:.4f})")
 
         if (epoch + 1) % train_cfg["save_every_n_epochs"] == 0:
             save_checkpoint(
