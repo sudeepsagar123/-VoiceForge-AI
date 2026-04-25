@@ -258,11 +258,8 @@ def train(config_path: str, resume: str = None, reset_lr: bool = False):
                     loss_disc.backward()
                     optim_d.step()
             else:
-                # Still compute disc loss for logging but don't update disc weights
-                with torch.no_grad():
-                    y_dp_r, y_dp_g, _, _ = mpd(y, y_hat.detach())
-                    y_ds_r, y_ds_g, _, _ = msd(y, y_hat.detach())
-                    loss_disc = discriminator_loss(y_dp_r, y_dp_g) + discriminator_loss(y_ds_r, y_ds_g)
+                # Skip disc training on odd batches — just set loss to 0 for logging
+                loss_disc = torch.tensor(0.0, device=device)
 
             # ── Generator Training ──
             optim_g.zero_grad()
