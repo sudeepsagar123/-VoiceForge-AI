@@ -161,7 +161,7 @@ def train(config_path: str, resume: str = None, reset_lr: bool = False):
     )
     optim_d = torch.optim.AdamW(
         list(mpd.parameters()) + list(msd.parameters()),
-        lr=train_cfg["learning_rate"],
+        lr=train_cfg["learning_rate"] * 0.5,  # Disc LR = half of Gen LR to give generator advantage
         betas=tuple(train_cfg["betas"]),
         eps=train_cfg["eps"],
         weight_decay=train_cfg["weight_decay"],
@@ -243,19 +243,26 @@ def train(config_path: str, resume: str = None, reset_lr: bool = False):
                 y_hat_mel = audio_processor.get_mel_spectrogram(y_hat.squeeze(1))
                 loss_mel = F.l1_loss(y_mel, y_hat_mel) * lw["mel"]
 
-            # ── Discriminator Training ──
-            optim_d.zero_grad()
-            with autocast(enabled=scaler is not None):
-                y_dp_r, y_dp_g, _, _ = mpd(y, y_hat.detach())
-                y_ds_r, y_ds_g, _, _ = msd(y, y_hat.detach())
-                loss_disc = discriminator_loss(y_dp_r, y_dp_g) + discriminator_loss(y_ds_r, y_ds_g)
+            # ── Discriminator Training (every 2nd batch to give generator advantage) ──
+            if num_batches % 2 == 0:
+                optim_d.zero_grad()
+                with autocast(enabled=scaler is not None):
+                    y_dp_r, y_dp_g, _, _ = mpd(y, y_hat.detach())
+                    y_ds_r, y_ds_g, _, _ = msd(y, y_hat.detach())
+                    loss_disc = discriminator_loss(y_dp_r, y_dp_g) + discriminator_loss(y_ds_r, y_ds_g)
 
-            if scaler:
-                scaler.scale(loss_disc).backward()
-                scaler.step(optim_d)
+                if scaler:
+                    scaler.scale(loss_disc).backward()
+                    scaler.step(optim_d)
+                else:
+                    loss_disc.backward()
+                    optim_d.step()
             else:
-                loss_disc.backward()
-                optim_d.step()
+                # Still compute disc loss for logging but don't update disc weights
+                with torch.no_grad():
+                    y_dp_r, y_dp_g, _, _ = mpd(y, y_hat.detach())
+                    y_ds_r, y_ds_g, _, _ = msd(y, y_hat.detach())
+                    loss_disc = discriminator_loss(y_dp_r, y_dp_g) + discriminator_loss(y_ds_r, y_ds_g)
 
             # ── Generator Training ──
             optim_g.zero_grad()

@@ -46,7 +46,7 @@ class STTInference:
             hop_length=160,
             win_length=400,
             n_mels=80,
-            use_pitch=True,
+            use_pitch=False,
         )
 
         # Tokenizer
@@ -229,10 +229,17 @@ class STTInference:
             except Exception:
                 pass
 
-        # Return a simple fallback
+        # Return a simple fallback for Unicode encoding used in training
         class FallbackTokenizer:
             def decode(self, ids):
-                return "".join(chr(i % 128 + 32) for i in ids)
+                res = []
+                for i in ids:
+                    if i == 0: continue  # CTC Blank
+                    try:
+                        res.append(chr(i))
+                    except ValueError:
+                        pass
+                return "".join(res)
         return FallbackTokenizer()
 
 

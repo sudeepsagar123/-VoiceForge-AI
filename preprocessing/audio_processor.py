@@ -43,7 +43,16 @@ class AudioProcessor:
             waveform: [1, T] tensor
             sample_rate: int
         """
-        waveform, sr = torchaudio.load(path)
+        try:
+            import soundfile as sf
+            data, sr = sf.read(path, dtype='float32')
+            waveform = torch.FloatTensor(data)
+            if waveform.dim() == 1:
+                waveform = waveform.unsqueeze(0)
+            else:
+                waveform = waveform.T  # soundfile returns [T, C], we need [C, T]
+        except ImportError:
+            waveform, sr = torchaudio.load(path)
 
         # Convert to mono if stereo
         if waveform.shape[0] > 1:

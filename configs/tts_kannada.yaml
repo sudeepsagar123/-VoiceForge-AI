@@ -60,7 +60,7 @@ audio:
 
 training:
   batch_size: 16
-  learning_rate: 2.0e-4
+  learning_rate: 1.0e-4
   betas: [0.8, 0.99]
   eps: 1.0e-9
   weight_decay: 0.01
@@ -72,7 +72,7 @@ training:
   eval_every_n_epochs: 5
   keep_last_n_checkpoints: 5
   loss_weights:
-    mel: 45.0
+    mel: 60.0
     kl: 1.0
     duration: 1.0
     generator: 1.0

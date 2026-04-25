@@ -127,11 +127,15 @@ class TTSInference:
 
         # Save
         os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-        torchaudio.save(
-            output_path,
-            torch.FloatTensor(full_audio).unsqueeze(0),
-            self.sample_rate,
-        )
+        try:
+            import soundfile as sf
+            sf.write(output_path, full_audio, self.sample_rate)
+        except ImportError:
+            torchaudio.save(
+                output_path,
+                torch.FloatTensor(full_audio).unsqueeze(0),
+                self.sample_rate,
+            )
         duration = len(full_audio) / self.sample_rate
         print(f"Saved: {output_path} ({duration:.1f}s)")
         return output_path
