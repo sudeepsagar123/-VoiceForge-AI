@@ -186,9 +186,9 @@ def train(config_path: str, resume: str = None, reset_lr: bool = False):
             else:
                 model.load_state_dict(ckpt["model_state_dict"])
             start_epoch = ckpt.get("epoch", 0)
-            best_loss = ckpt.get("best_loss", float("inf"))
+            best_loss = float("inf")  # Reset best_loss since mel weight may have changed
             logger.info(f"Loaded weights from {resume} (epoch {start_epoch}) with FRESH optimizers")
-            logger.info("Adversarial momentum reset to break plateau!")
+            logger.info(f"best_loss RESET to inf (mel weight may have changed)")
         else:
             info = load_checkpoint(resume, model, optim_g, scheduler_g, device)
             start_epoch = info["epoch"]
